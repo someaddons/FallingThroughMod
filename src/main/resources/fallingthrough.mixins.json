@@ -1,0 +1,14 @@
+{
+  "required": false,
+  "package": "com.fallingthrough.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "fallingthrough.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}
