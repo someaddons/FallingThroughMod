@@ -102,9 +102,7 @@ public class EventHandler
             return false;
         }
 
-        BlockPos tpPos = playerEntity.blockPosition();
-
-        tpPos = gotoDim.getSpawnPos(gotoWorld, tpPos.getX(), tpPos.getZ());
+        BlockPos tpPos = gotoDim.getSpawnPos(gotoWorld, playerEntity.getX(), playerEntity.getZ());
         if (tpPos == null)
         {
             return false;
@@ -112,7 +110,7 @@ public class EventHandler
 
         // Config if should give effect, could give some other effects aswell
         playerEntity.addEffect(new EffectInstance(Effects.SLOW_FALLING, 300));
-        playerEntity.teleportTo(gotoWorld, tpPos.getX(), tpPos.getY(), tpPos.getZ(), playerEntity.yRot, playerEntity.xRot);
+        playerEntity.teleportTo(gotoWorld, tpPos.getX() + 0.5, tpPos.getY(), tpPos.getZ() + 0.5, playerEntity.yRot, playerEntity.xRot);
         return true;
     }
 }

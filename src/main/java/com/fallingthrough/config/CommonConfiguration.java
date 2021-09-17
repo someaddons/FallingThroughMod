@@ -46,7 +46,7 @@ public class CommonConfiguration
             + "GROUND spawns the player on the normal groundlevel,"
             + "CAVE spawns the player in the first open space going from 0 up."
             + "Use [first,second] to list multiple entries.");
-        aboveDimension = builder.defineList("additionalStructures",
+        aboveDimension = builder.defineList("aboveDimension",
           Arrays.asList("minecraft:the_nether;minecraft:overworld;0.125;0.125;CAVE",
             "minecraft:overworld;minecraft:overworld;0.8;0.8;AIR")
           , e -> e instanceof String);

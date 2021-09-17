@@ -62,13 +62,13 @@ public class DimensionData
      *
      * @param world
      * @param xOriginal
-     * @param zOriginal
+     * @param zOriginal // 115.3x -242.3z
      * @return position to put the player at
      */
-    public BlockPos getSpawnPos(final IWorld world, int xOriginal, int zOriginal)
+    public BlockPos getSpawnPos(final IWorld world, double xOriginal, double zOriginal)
     {
-        xOriginal = (int) (xOriginal / xDivider);
-        zOriginal = (int) (zOriginal / zDivider);
+        xOriginal = (xOriginal / xDivider);
+        zOriginal = (zOriginal / zDivider);
 
         switch (yspawn)
         {
@@ -76,9 +76,9 @@ public class DimensionData
                 return findAround(world, new BlockPos(xOriginal, world.getHeight() - 4, zOriginal), 4, 50, -2, DOUBLE_AIR);
             case GROUND:
                 // Load chunk
-                final IChunk targetChunk = world.getChunk(xOriginal >> 4, zOriginal >> 4);
+                final IChunk targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);
                 return findAround(world,
-                  new BlockPos(xOriginal, targetChunk.getHeight(Heightmap.Type.WORLD_SURFACE, xOriginal, zOriginal), zOriginal),
+                  new BlockPos(xOriginal, targetChunk.getHeight(Heightmap.Type.WORLD_SURFACE, (int) Math.floor(xOriginal), (int) Math.floor(zOriginal)), zOriginal),
                   20,
                   50,
                   2,
