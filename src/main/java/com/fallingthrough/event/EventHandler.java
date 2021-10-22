@@ -3,15 +3,15 @@ package com.fallingthrough.event;
 import com.fallingthrough.FallingthroughMod;
 import com.fallingthrough.config.ConfigurationCache;
 import com.fallingthrough.config.DimensionData;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -31,9 +31,9 @@ public class EventHandler
 
         if (FallingthroughMod.config.getCommonConfig().enableAboveDimensionTP.get())
         {
-            if (event.player.getY() >= event.player.level.getHeight() || event.player.getY() <= 0)
+            if (event.player.getY() >= event.player.level.getLogicalHeight() || event.player.getY() <= event.player.level.dimensionType().minY())
             {
-                tryTpPlayer((ServerPlayerEntity) event.player);
+                tryTpPlayer((ServerPlayer) event.player);
             }
         }
     }
@@ -43,12 +43,12 @@ public class EventHandler
     {
         if (event.getSource() == DamageSource.OUT_OF_WORLD)
         {
-            if (!(event.getEntity() instanceof PlayerEntity) || event.getEntity().level.isClientSide)
+            if (!(event.getEntity() instanceof Player) || event.getEntity().level.isClientSide)
             {
                 return;
             }
 
-            final ServerPlayerEntity playerEntity = (ServerPlayerEntity) event.getEntity();
+            final ServerPlayer playerEntity = (ServerPlayer) event.getEntity();
             if (tryTpPlayer(playerEntity))
             {
                 event.setAmount(0f);
@@ -62,17 +62,17 @@ public class EventHandler
      * @param playerEntity
      * @return
      */
-    private static boolean tryTpPlayer(final ServerPlayerEntity playerEntity)
+    private static boolean tryTpPlayer(final ServerPlayer playerEntity)
     {
         if (playerEntity.isCreative() || playerEntity.isSpectator())
         {
             return false;
         }
 
-        final ServerWorld world = (ServerWorld) playerEntity.level;
+        final ServerLevel world = (ServerLevel) playerEntity.level;
 
         DimensionData gotoDim;
-        if (playerEntity.blockPosition().getY() <= 0)
+        if (playerEntity.blockPosition().getY() <= playerEntity.level.dimensionType().minY())
         {
             gotoDim = ConfigurationCache.belowToNextDim.get(world.dimension().location());
         }
@@ -86,8 +86,8 @@ public class EventHandler
             return false;
         }
 
-        ServerWorld gotoWorld = null;
-        for (final RegistryKey<World> key : world.getServer().levelKeys())
+        ServerLevel gotoWorld = null;
+        for (final ResourceKey<Level> key : world.getServer().levelKeys())
         {
             if (key.location().equals(gotoDim.getID()))
             {
@@ -109,8 +109,8 @@ public class EventHandler
         }
 
         // Config if should give effect, could give some other effects aswell
-        playerEntity.addEffect(new EffectInstance(Effects.SLOW_FALLING, 300));
-        playerEntity.teleportTo(gotoWorld, tpPos.getX() + 0.5, tpPos.getY(), tpPos.getZ() + 0.5, playerEntity.yRot, playerEntity.xRot);
+        playerEntity.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 300));
+        playerEntity.teleportTo(gotoWorld, tpPos.getX() + 0.5, tpPos.getY(), tpPos.getZ() + 0.5, playerEntity.getYRot(), playerEntity.getXRot());
         return true;
     }
 }

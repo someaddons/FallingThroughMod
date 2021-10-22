@@ -1,13 +1,13 @@
 package com.fallingthrough.config;
 
 import com.fallingthrough.FallingthroughMod;
-import net.minecraft.block.material.Material;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.gen.Heightmap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.material.Material;
 
 import java.util.function.BiPredicate;
 
@@ -65,7 +65,7 @@ public class DimensionData
      * @param zOriginal // 115.3x -242.3z
      * @return position to put the player at
      */
-    public BlockPos getSpawnPos(final IWorld world, double xOriginal, double zOriginal)
+    public BlockPos getSpawnPos(final LevelAccessor world, double xOriginal, double zOriginal)
     {
         xOriginal = (xOriginal / xDivider);
         zOriginal = (zOriginal / zDivider);
@@ -73,12 +73,12 @@ public class DimensionData
         switch (yspawn)
         {
             case AIR:
-                return findAround(world, new BlockPos(xOriginal, world.getHeight() - 4, zOriginal), 4, 50, -2, DOUBLE_AIR);
+                return findAround(world, new BlockPos(xOriginal, world.getLogicalHeight() - 4, zOriginal), 4, 50, -2, DOUBLE_AIR);
             case GROUND:
                 // Load chunk
-                final IChunk targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);
+                final ChunkAccess targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);
                 return findAround(world,
-                  new BlockPos(xOriginal, targetChunk.getHeight(Heightmap.Type.WORLD_SURFACE, (int) Math.floor(xOriginal), (int) Math.floor(zOriginal)), zOriginal),
+                  new BlockPos(xOriginal, targetChunk.getHeight(Heightmap.Types.WORLD_SURFACE, (int) Math.floor(xOriginal), (int) Math.floor(zOriginal)), zOriginal),
                   20,
                   50,
                   2,
@@ -93,9 +93,9 @@ public class DimensionData
     /**
      * Predicate for pos selection
      */
-    final BiPredicate<IBlockReader, BlockPos> DOUBLE_AIR        =
+    final BiPredicate<BlockGetter, BlockPos> DOUBLE_AIR        =
       (world, pos) -> world.getBlockState(pos).getMaterial() == Material.AIR && world.getBlockState(pos.above()).getMaterial() == Material.AIR;
-    final BiPredicate<IBlockReader, BlockPos> DOUBLE_AIR_GROUND = DOUBLE_AIR.and((world, pos) -> world.getBlockState(pos.below()).getMaterial().isSolid());
+    final BiPredicate<BlockGetter, BlockPos> DOUBLE_AIR_GROUND = DOUBLE_AIR.and((world, pos) -> world.getBlockState(pos.below()).getMaterial().isSolid());
 
     /**
      * Finds a nice position around
@@ -109,12 +109,12 @@ public class DimensionData
      * @return
      */
     public static BlockPos findAround(
-      final IWorld world,
+      final LevelAccessor world,
       final BlockPos start,
       final int vRange,
       final int hRange,
       final int yStep,
-      final BiPredicate<IBlockReader, BlockPos> predicate)
+      final BiPredicate<BlockGetter, BlockPos> predicate)
     {
         if (vRange < 1 && hRange < 1)
         {
@@ -179,7 +179,7 @@ public class DimensionData
 
             y += y_offset;
 
-            if (world.getHeight() <= start.getY() + y)
+            if (world.getLogicalHeight() <= start.getY() + y)
             {
                 return null;
             }

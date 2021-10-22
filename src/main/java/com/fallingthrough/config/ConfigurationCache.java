@@ -1,7 +1,7 @@
 package com.fallingthrough.config;
 
 import com.fallingthrough.FallingthroughMod;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;
 import java.util.Map;
