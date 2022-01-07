@@ -73,7 +73,7 @@ public class DimensionData
         switch (yspawn)
         {
             case AIR:
-                return findAround(world, new BlockPos(xOriginal, world.getLogicalHeight() - 4, zOriginal), 4, 50, -2, DOUBLE_AIR);
+                return findAround(world, new BlockPos(xOriginal, world.dimensionType().logicalHeight() - 4, zOriginal), 4, 50, -2, DOUBLE_AIR);
             case GROUND:
                 // Load chunk
                 final ChunkAccess targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);
@@ -179,7 +179,7 @@ public class DimensionData
 
             y += y_offset;
 
-            if (world.getLogicalHeight() <= start.getY() + y)
+            if (world.dimensionType().logicalHeight() <= start.getY() + y)
             {
                 return null;
             }
