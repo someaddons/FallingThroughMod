@@ -85,6 +85,9 @@ repositories{
     maven {
         url "https://www.cursemaven.com"
     }
+    flatDir {
+        dirs 'mods'
+    }
 }
 
 mixin {

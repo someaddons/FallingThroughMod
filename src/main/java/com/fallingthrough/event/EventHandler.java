@@ -31,7 +31,7 @@ public class EventHandler
 
         if (FallingthroughMod.config.getCommonConfig().enableAboveDimensionTP.get())
         {
-            if (event.player.getY() >= event.player.level.dimensionType().logicalHeight() || event.player.getY() <= event.player.level.dimensionType().minY())
+            if (event.player.getY() >= event.player.level.dimensionType().height() || event.player.getY() <= event.player.level.dimensionType().minY())
             {
                 tryTpPlayer((ServerPlayer) event.player);
             }
