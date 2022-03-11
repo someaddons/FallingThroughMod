@@ -26,6 +26,7 @@ public class DimensionData
      */
     private double xDivider = 1.0d;
     private double zDivider = 1.0d;
+    private int leeWay = 0;
 
     /**
      * Y-spawn selector
@@ -46,6 +47,7 @@ public class DimensionData
     {
         return id;
     }
+
 
     /**
      * Y-Spawn types
@@ -73,7 +75,13 @@ public class DimensionData
         switch (yspawn)
         {
             case AIR:
-                return findAround(world, new BlockPos(xOriginal, world.dimensionType().logicalHeight() - 4, zOriginal), 4, 50, -2, DOUBLE_AIR);
+
+                final BlockPos solidAir= findAround(world, new BlockPos(xOriginal, world.dimensionType().logicalHeight() - 4, zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
+                if (solidAir != null)
+                {
+                    return solidAir;
+                }
+                return  findAround(world, new BlockPos(xOriginal, world.dimensionType().logicalHeight() - 4, zOriginal), 4, 50, -2, DOUBLE_AIR);
             case GROUND:
                 // Load chunk
                 final ChunkAccess targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);
@@ -222,9 +230,23 @@ public class DimensionData
         }
         catch (Exception e)
         {
-            FallingthroughMod.LOGGER.warn("Error parsing config second y positions setting, should be one of :AIR,GROUND,CAVE: " + splitData[4]);
+            FallingthroughMod.LOGGER.warn("Error parsing config second y spawn positions setting, should be one of :AIR,GROUND,CAVE: " + splitData[4]);
+        }
+
+        try
+        {
+            data.leeWay = Integer.parseInt(splitData[5]);
+        }
+        catch (Exception e)
+        {
+            FallingthroughMod.LOGGER.warn("Error parsing config for dimension tp distance , should be a number: " + splitData[5]);
         }
 
         return data;
+    }
+
+    public int getLeeWay()
+    {
+        return leeWay;
     }
 }

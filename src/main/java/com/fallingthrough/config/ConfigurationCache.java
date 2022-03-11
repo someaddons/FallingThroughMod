@@ -31,9 +31,9 @@ public class ConfigurationCache
     {
         final String[] splitData = data.split(";");
 
-        if (splitData.length != 5)
+        if (splitData.length != 6)
         {
-            FallingthroughMod.LOGGER.warn("Error parsing config entry, need 5 seperated entries with /; : " + data);
+            FallingthroughMod.LOGGER.warn("Error parsing config entry, you are likely loading a config of an older version. Recommended to delete and let it regenerate, need 6 seperated entries with /; : " + data);
             return;
         }
 
