@@ -26,7 +26,7 @@ public class DimensionData
      */
     private double xDivider = 1.0d;
     private double zDivider = 1.0d;
-    private int leeWay = 0;
+    private int    leeWay   = 0;
 
     /**
      * Y-spawn selector
@@ -47,7 +47,6 @@ public class DimensionData
     {
         return id;
     }
-
 
     /**
      * Y-Spawn types
@@ -76,12 +75,12 @@ public class DimensionData
         {
             case AIR:
 
-                final BlockPos solidAir= findAround(world, new BlockPos(xOriginal, world.dimensionType().logicalHeight() - 4, zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
+                final BlockPos solidAir = findAround(world, new BlockPos(xOriginal, world.dimensionType().height() - (4 + leeWay), zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
                 if (solidAir != null)
                 {
                     return solidAir;
                 }
-                return  findAround(world, new BlockPos(xOriginal, world.dimensionType().logicalHeight() - 4, zOriginal), 4, 50, -2, DOUBLE_AIR);
+                return findAround(world, new BlockPos(xOriginal, world.dimensionType().height() - (4 + leeWay), zOriginal), 4, 50, -2, DOUBLE_AIR);
             case GROUND:
                 // Load chunk
                 final ChunkAccess targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);

@@ -174,9 +174,8 @@ public class EventHandler
           1.0F,
           2F + (FallingthroughMod.rand.nextFloat() - FallingthroughMod.rand.nextFloat()) * 0.2F);
 
-        // Config if should give effect, could give some other effects aswell
         playerEntity.teleportTo(gotoWorld, tpPos.getX() + 0.5, tpPos.getY(), tpPos.getZ() + 0.5, playerEntity.getYRot(), playerEntity.getXRot());
-        playerEntity.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 300));
+        playerEntity.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, FallingthroughMod.config.getCommonConfig().slowFallDuration.get()));
         return true;
     }
 }
