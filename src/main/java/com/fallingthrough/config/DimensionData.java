@@ -1,6 +1,7 @@
 package com.fallingthrough.config;
 
 import com.fallingthrough.FallingthroughMod;
+import com.fallingthrough.event.WorldUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.BlockGetter;
@@ -74,13 +75,12 @@ public class DimensionData
         switch (yspawn)
         {
             case AIR:
-
-                final BlockPos solidAir = findAround(world, new BlockPos(xOriginal, world.dimensionType().height() - (4 + leeWay), zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
+                final BlockPos solidAir = findAround(world, new BlockPos(xOriginal, WorldUtil.getDimensionMaxHeight(world.dimensionType()) - (4 + leeWay), zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
                 if (solidAir != null)
                 {
                     return solidAir;
                 }
-                return findAround(world, new BlockPos(xOriginal, world.dimensionType().height() - (4 + leeWay), zOriginal), 4, 50, -2, DOUBLE_AIR);
+                return findAround(world, new BlockPos(xOriginal,  WorldUtil.getDimensionMaxHeight(world.dimensionType()) - (4 + leeWay), zOriginal), 4, 50, -2, DOUBLE_AIR);
             case GROUND:
                 // Load chunk
                 final ChunkAccess targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);
@@ -186,7 +186,7 @@ public class DimensionData
 
             y += y_offset;
 
-            if (world.dimensionType().logicalHeight() <= start.getY() + y)
+            if (WorldUtil.getDimensionMaxHeight(world.dimensionType()) <= start.getY() + y || start.getY() + y >= WorldUtil.getDimensionMinHeight(world.dimensionType()))
             {
                 return null;
             }

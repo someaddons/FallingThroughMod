@@ -44,17 +44,17 @@ public class EventHandler
 
         if (FallingthroughMod.config.getCommonConfig().enableAboveDimensionTP.get())
         {
-            if (event.player.getY() >= event.player.level.dimensionType().height() || event.player.getY() <= event.player.level.dimensionType().minY())
+            if (event.player.getY() >= WorldUtil.getDimensionMaxHeight(event.player.level.dimensionType()) || event.player.getY() <= WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()))
             {
-                tryTpPlayer((ServerPlayer) event.player, event.player.blockPosition().getY() <= event.player.level.dimensionType().minY());
+                tryTpPlayer((ServerPlayer) event.player, event.player.blockPosition().getY() <= WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()));
                 return;
             }
 
             final DimensionData above = ConfigurationCache.aboveToNextDim.get(event.player.level.dimension().location());
             final DimensionData below = ConfigurationCache.belowToNextDim.get(event.player.level.dimension().location());
 
-            final boolean aboveTP = above != null && above.getLeeWay() != 0 && event.player.getY() >= (event.player.level.dimensionType().height() - above.getLeeWay());
-            final boolean belowTP = below != null && below.getLeeWay() != 0 && event.player.getY() <= (event.player.level.dimensionType().minY() + below.getLeeWay());
+            final boolean aboveTP = above != null && above.getLeeWay() != 0 && event.player.getY() >= (WorldUtil.getDimensionMaxHeight(event.player.level.dimensionType()) - above.getLeeWay());
+            final boolean belowTP = below != null && below.getLeeWay() != 0 && event.player.getY() <= (WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()) + below.getLeeWay());
 
             if (aboveTP || belowTP)
             {
@@ -106,7 +106,7 @@ public class EventHandler
             }
 
             final ServerPlayer playerEntity = (ServerPlayer) event.getEntity();
-            if (tryTpPlayer(playerEntity, playerEntity.blockPosition().getY() <= playerEntity.level.dimensionType().minY()))
+            if (tryTpPlayer(playerEntity, playerEntity.blockPosition().getY() <= WorldUtil.getDimensionMinHeight(playerEntity.level.dimensionType())))
             {
                 event.setAmount(0f);
             }
