@@ -91,7 +91,7 @@ public class DimensionData
                   2,
                   DOUBLE_AIR);
             case CAVE:
-                return findAround(world, new BlockPos(xOriginal, 1, zOriginal), 12, 50, 2, DOUBLE_AIR_GROUND);
+                return findAround(world, new BlockPos(xOriginal, WorldUtil.getDimensionMinHeight(world.dimensionType()) + 6 + leeWay, zOriginal), 12, 50, 2, DOUBLE_AIR_GROUND);
         }
 
         return null;
