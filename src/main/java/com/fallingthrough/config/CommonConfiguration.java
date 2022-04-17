@@ -29,7 +29,7 @@ public class CommonConfiguration
             + "DimensionBorderTPDistance: Distance from the dimensions border at which the teleport starts \n"
             + "Use [first,second] to list multiple entries.");
         belowDimension = builder.defineList("belowDimension",
-          Arrays.asList("minecraft:overworld;minecraft:the_nether;8;8;AIR;0",
+          Arrays.asList("minecraft:overworld;minecraft:the_nether;8;8;AIR;4",
             "minecraft:the_end;minecraft:overworld;1;1;AIR;0",
             "minecraft:the_nether;minecraft:the_nether;1;1;CAVE;0")
           , e -> e instanceof String);
@@ -50,7 +50,7 @@ public class CommonConfiguration
             + "DimensionBorderTPDistance: Distance from the dimensions border at which the teleport starts \n"
             + "Use [first,second] to list multiple entries.");
         aboveDimension = builder.defineList("aboveDimension",
-          Arrays.asList("minecraft:the_nether;minecraft:overworld;0.125;0.125;CAVE;0",
+          Arrays.asList("minecraft:the_nether;minecraft:overworld;0.125;0.125;CAVE;4",
             "minecraft:overworld;minecraft:overworld;0.8;0.8;AIR;0")
           , e -> e instanceof String);
 

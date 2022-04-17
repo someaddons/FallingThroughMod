@@ -11,7 +11,7 @@ public class WorldUtil
      */
     public static int getDimensionMaxHeight(final DimensionType dimensionType)
     {
-        return dimensionType.height() - Math.abs(dimensionType.minY());
+        return dimensionType.logicalHeight() + dimensionType.minY();
     }
 
     /**

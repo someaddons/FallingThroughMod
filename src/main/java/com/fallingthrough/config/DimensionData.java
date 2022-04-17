@@ -4,12 +4,15 @@ import com.fallingthrough.FallingthroughMod;
 import com.fallingthrough.event.WorldUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Material;
 
+import java.util.Comparator;
 import java.util.function.BiPredicate;
 
 /**
@@ -57,6 +60,16 @@ public class DimensionData
         AIR,
         GROUND,
         CAVE;
+    }
+
+    /**
+     * Translates the position for this dimension data
+     * @param original
+     * @return
+     */
+    public BlockPos translatePosition(final BlockPos original)
+    {
+        return new BlockPos(original.getX()/xDivider,original.getY(), original.getZ()/zDivider);
     }
 
     /**
@@ -186,7 +199,7 @@ public class DimensionData
 
             y += y_offset;
 
-            if (WorldUtil.getDimensionMaxHeight(world.dimensionType()) <= start.getY() + y || start.getY() + y >= WorldUtil.getDimensionMinHeight(world.dimensionType()))
+            if (start.getY() + y >= WorldUtil.getDimensionMaxHeight(world.dimensionType()) || start.getY() + y <= WorldUtil.getDimensionMinHeight(world.dimensionType()))
             {
                 return null;
             }

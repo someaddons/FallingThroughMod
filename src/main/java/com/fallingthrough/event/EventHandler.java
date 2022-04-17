@@ -7,18 +7,22 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -28,6 +32,8 @@ import java.util.UUID;
  */
 public class EventHandler
 {
+    public static final TicketType<ChunkPos> TELEPORT_TICKET = TicketType.create("fallingthroughTP", Comparator.comparingLong(ChunkPos::toLong), 20 * 60);
+
     /**
      * Time to tp in 4sec steps
      */
@@ -72,6 +78,34 @@ public class EventHandler
                 {
                     event.player.sendMessage(new TextComponent("Dimensional forces are getting stronger...").withStyle(
                       ChatFormatting.DARK_PURPLE), event.player.getUUID());
+
+                    // Copy from teleporting, adds a previous ticket before accessing
+                    DimensionData gotoDim;
+                    if (belowTP)
+                    {
+                        gotoDim = ConfigurationCache.belowToNextDim.get(event.player.level.dimension().location());
+                    }
+                    else
+                    {
+                        gotoDim = ConfigurationCache.aboveToNextDim.get(event.player.level.dimension().location());
+                    }
+
+
+                    ServerLevel gotoWorld = null;
+                    for (final ResourceKey<Level> key : event.player.level.getServer().levelKeys())
+                    {
+                        if (key.location().equals(gotoDim.getID()))
+                        {
+                            gotoWorld = event.player.level.getServer().getLevel(key);
+                            break;
+                        }
+                    }
+
+                    if (gotoWorld != null)
+                    {
+                        final ChunkPos dimensionPos = new ChunkPos(gotoDim.translatePosition(event.player.blockPosition()));
+                        ((ServerChunkCache) gotoWorld.getChunkSource()).addRegionTicket(TELEPORT_TICKET, dimensionPos, 2, dimensionPos);
+                    }
                 }
 
                 event.player.level.playSound((Player) null,
