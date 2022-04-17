@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "package": "com.fallingthrough.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "fallingthrough.refmap.json",
+  "mixins": [
+    "PlayerTickMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}

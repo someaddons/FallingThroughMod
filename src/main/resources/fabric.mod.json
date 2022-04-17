@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "fallingthrough",
+  "version": "${version}",
+
+  "name": "Fallingthrough Mod",
+  "description": "Connects dimension boundaries with eachother",
+  "authors": [
+    "Someaddons"
+  ],
+  "contact": {
+    "homepage": "",
+    "sources": ""
+  },
+
+  "license": "ARR",
+  "icon": "assets/modid/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.fallingthrough.FallingthroughMod"
+    ]
+  },
+  "mixins": [
+    "fallingthrough.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "fabric": "*",
+    "minecraft": "1.18.x",
+    "java": ">=17"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
