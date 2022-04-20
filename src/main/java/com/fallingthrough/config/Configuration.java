@@ -39,7 +39,7 @@ public class Configuration
 
         if (!config.exists())
         {
-            FallingthroughMod.LOGGER.warn("Config for limited chunks not found, recreating default");
+            FallingthroughMod.LOGGER.warn("Config not found, recreating default");
             save();
         }
         else

@@ -76,7 +76,6 @@ public class EventHandler
                     player.sendMessage(new TextComponent("Dimensional forces are getting stronger...").withStyle(
                       ChatFormatting.DARK_PURPLE), player.getUUID());
 
-
                     // Copy from teleporting, adds a previous ticket before accessing
                     DimensionData gotoDim;
                     if (belowTP)
