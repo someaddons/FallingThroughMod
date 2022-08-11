@@ -5,7 +5,7 @@ import com.fallingthrough.config.ConfigurationCache;
 import com.fallingthrough.config.DimensionData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
@@ -67,14 +67,15 @@ public class EventHandler
 
                 if (time == 1)
                 {
-                    player.sendMessage(new TextComponent("Dimensional forces are starting to affect you, pulling you " + (aboveTP ? "up" : "down") + ", take care!").withStyle(
-                      ChatFormatting.DARK_AQUA), player.getUUID());
+                    player.sendSystemMessage(Component.literal("Dimensional forces are starting to affect you, pulling you " + (aboveTP ? "up" : "down") + ", take care!")
+                      .withStyle(
+                        ChatFormatting.DARK_AQUA));
                 }
 
                 if (time == 6)
                 {
-                    player.sendMessage(new TextComponent("Dimensional forces are getting stronger...").withStyle(
-                      ChatFormatting.DARK_PURPLE), player.getUUID());
+                    player.sendSystemMessage(Component.literal("Dimensional forces are getting stronger...").withStyle(
+                      ChatFormatting.DARK_PURPLE));
 
                     // Copy from teleporting, adds a previous ticket before accessing
                     DimensionData gotoDim;
