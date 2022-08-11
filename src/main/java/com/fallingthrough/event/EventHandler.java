@@ -5,7 +5,7 @@ import com.fallingthrough.config.ConfigurationCache;
 import com.fallingthrough.config.DimensionData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
@@ -50,7 +50,8 @@ public class EventHandler
 
         if (FallingthroughMod.config.getCommonConfig().enableAboveDimensionTP.get())
         {
-            if (event.player.getY() >= WorldUtil.getDimensionMaxHeight(event.player.level.dimensionType()) || event.player.getY() <= WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()))
+            if (event.player.getY() >= WorldUtil.getDimensionMaxHeight(event.player.level.dimensionType())
+                  || event.player.getY() <= WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()))
             {
                 tryTpPlayer((ServerPlayer) event.player, event.player.blockPosition().getY() <= WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()));
                 return;
@@ -59,8 +60,10 @@ public class EventHandler
             final DimensionData above = ConfigurationCache.aboveToNextDim.get(event.player.level.dimension().location());
             final DimensionData below = ConfigurationCache.belowToNextDim.get(event.player.level.dimension().location());
 
-            final boolean aboveTP = above != null && above.getLeeWay() != 0 && event.player.getY() >= (WorldUtil.getDimensionMaxHeight(event.player.level.dimensionType()) - above.getLeeWay());
-            final boolean belowTP = below != null && below.getLeeWay() != 0 && event.player.getY() <= (WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()) + below.getLeeWay());
+            final boolean aboveTP =
+              above != null && above.getLeeWay() != 0 && event.player.getY() >= (WorldUtil.getDimensionMaxHeight(event.player.level.dimensionType()) - above.getLeeWay());
+            final boolean belowTP =
+              below != null && below.getLeeWay() != 0 && event.player.getY() <= (WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()) + below.getLeeWay());
 
             if (aboveTP || belowTP)
             {
@@ -70,14 +73,15 @@ public class EventHandler
 
                 if (time == 1)
                 {
-                    event.player.sendMessage(new TextComponent("Dimensional forces are starting to affect you, pulling you " + (aboveTP ? "up" : "down") + ", take care!").withStyle(
-                      ChatFormatting.DARK_AQUA), event.player.getUUID());
+                    event.player.sendSystemMessage(Component.literal("Dimensional forces are starting to affect you, pulling you " + (aboveTP ? "up" : "down") + ", take care!")
+                      .withStyle(
+                        ChatFormatting.DARK_AQUA));
                 }
 
                 if (time == 6)
                 {
-                    event.player.sendMessage(new TextComponent("Dimensional forces are getting stronger...").withStyle(
-                      ChatFormatting.DARK_PURPLE), event.player.getUUID());
+                    event.player.sendSystemMessage(Component.literal("Dimensional forces are getting stronger...").withStyle(
+                      ChatFormatting.DARK_PURPLE));
 
                     // Copy from teleporting, adds a previous ticket before accessing
                     DimensionData gotoDim;
@@ -104,7 +108,7 @@ public class EventHandler
                     if (gotoWorld != null)
                     {
                         final ChunkPos dimensionPos = new ChunkPos(gotoDim.translatePosition(event.player.blockPosition()));
-                        ((ServerChunkCache) gotoWorld.getChunkSource()).addRegionTicket(TELEPORT_TICKET, dimensionPos, 2, dimensionPos);
+                        gotoWorld.getChunkSource().addRegionTicket(TELEPORT_TICKET, dimensionPos, 2, dimensionPos);
                     }
                 }
 
