@@ -11,6 +11,7 @@ public class CommonConfiguration
     public final ForgeConfigSpec.ConfigValue<List<? extends String>> belowDimension;
     public final ForgeConfigSpec.ConfigValue<List<? extends String>> aboveDimension;
     public final ForgeConfigSpec.ConfigValue<Boolean>                enableAboveDimensionTP;
+    public final ForgeConfigSpec.ConfigValue<Boolean>                enableDebuglog;
     public final ForgeConfigSpec.ConfigValue<Integer>                slowFallDuration;
 
     protected CommonConfiguration(final ForgeConfigSpec.Builder builder)
@@ -55,7 +56,10 @@ public class CommonConfiguration
           , e -> e instanceof String);
 
         builder.comment("Duration of the slowfall potion after teleporting, default: 400 ticks (20 ticks = 1 second)");
-        slowFallDuration = builder.defineInRange("slowFallDuration", 400,0,100000);
+        slowFallDuration = builder.defineInRange("slowFallDuration", 400, 0, 100000);
+
+        builder.comment("Enables debug logging");
+        enableDebuglog = builder.define("enableDebuglog", false);
 
         // Escapes the current category level
         builder.pop();

@@ -43,7 +43,7 @@ public class EventHandler
     @SubscribeEvent
     public static void onPlayerTick(final TickEvent.PlayerTickEvent event)
     {
-        if (event.player.level.isClientSide() || event.player.level.getGameTime() % 80 != 0)
+        if (event.player.level.isClientSide() || event.player.level.getGameTime() % 80 != 0 || event.phase == TickEvent.Phase.START)
         {
             return;
         }
@@ -205,13 +205,19 @@ public class EventHandler
             return false;
         }
 
+
+        if (FallingthroughMod.config.getCommonConfig().enableDebuglog.get())
+        {
+            FallingthroughMod.LOGGER.info(
+              "Teleporting player " + playerEntity.getDisplayName().getString()+"("+ playerEntity.getId() + ") from " + playerEntity.blockPosition().toShortString() + " in " + playerEntity.level.dimension().location()
+                + " to: " + tpPos.toShortString() + " in " + gotoWorld.dimension().location() +
+                " with TP type:" + gotoDim.yspawn);
+        }
+
         final WorldBorder worldborder = gotoWorld.getWorldBorder();
         tpPos = worldborder.clampToBounds(tpPos.getX(), tpPos.getY(), tpPos.getZ());
 
-        gotoWorld.playSound((Player) null,
-          playerEntity.getX(),
-          playerEntity.getY(),
-          playerEntity.getZ(),
+        playerEntity.playNotifySound(
           SoundEvents.PORTAL_TRAVEL,
           playerEntity.getSoundSource(),
           1.0F,

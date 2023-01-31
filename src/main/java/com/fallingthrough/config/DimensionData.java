@@ -26,14 +26,14 @@ public class DimensionData
     /**
      * Coordinate modifiers
      */
-    private double xDivider = 1.0d;
-    private double zDivider = 1.0d;
+    public double xDivider = 1.0d;
+    public double zDivider = 1.0d;
     private int    leeWay   = 0;
 
     /**
      * Y-spawn selector
      */
-    private YSPAWN yspawn = YSPAWN.AIR;
+    public YSPAWN yspawn = YSPAWN.AIR;
 
     public DimensionData(final ResourceLocation id)
     {
