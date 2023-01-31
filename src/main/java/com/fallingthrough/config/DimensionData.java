@@ -4,15 +4,13 @@ import com.fallingthrough.FallingthroughMod;
 import com.fallingthrough.event.WorldUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.TicketType;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Material;
 
-import java.util.Comparator;
 import java.util.function.BiPredicate;
 
 /**
@@ -64,12 +62,13 @@ public class DimensionData
 
     /**
      * Translates the position for this dimension data
+     *
      * @param original
      * @return
      */
     public BlockPos translatePosition(final BlockPos original)
     {
-        return new BlockPos(original.getX()/xDivider,original.getY(), original.getZ()/zDivider);
+        return new BlockPos(original.getX() / xDivider, original.getY(), original.getZ() / zDivider);
     }
 
     /**
@@ -88,12 +87,13 @@ public class DimensionData
         switch (yspawn)
         {
             case AIR:
-                final BlockPos solidAir = findAround(world, new BlockPos(xOriginal, WorldUtil.getDimensionMaxHeight(world.dimensionType()) - (4 + leeWay), zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
+                final BlockPos solidAir =
+                  findAround(world, new BlockPos(xOriginal, WorldUtil.getDimensionMaxHeight((ServerLevel) world) - (4 + leeWay), zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
                 if (solidAir != null)
                 {
                     return solidAir;
                 }
-                return findAround(world, new BlockPos(xOriginal,  WorldUtil.getDimensionMaxHeight(world.dimensionType()) - (4 + leeWay), zOriginal), 4, 50, -2, DOUBLE_AIR);
+                return findAround(world, new BlockPos(xOriginal, WorldUtil.getDimensionMaxHeight((ServerLevel) world) - (4 + leeWay), zOriginal), 4, 50, -2, DOUBLE_AIR);
             case GROUND:
                 // Load chunk
                 final ChunkAccess targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);
@@ -104,7 +104,7 @@ public class DimensionData
                   2,
                   DOUBLE_AIR);
             case CAVE:
-                return findAround(world, new BlockPos(xOriginal, WorldUtil.getDimensionMinHeight(world.dimensionType()) + 6 + leeWay, zOriginal), 12, 50, 2, DOUBLE_AIR_GROUND);
+                return findAround(world, new BlockPos(xOriginal, WorldUtil.getDimensionMinHeight((ServerLevel) world) + 6 + leeWay, zOriginal), 20, 50, 2, DOUBLE_AIR_GROUND);
         }
 
         return null;
@@ -122,8 +122,8 @@ public class DimensionData
      *
      * @param world
      * @param start
-     * @param vRange
-     * @param hRange
+     * @param horizontal
+     * @param vertical
      * @param yStep
      * @param predicate
      * @return
@@ -131,12 +131,12 @@ public class DimensionData
     public static BlockPos findAround(
       final LevelAccessor world,
       final BlockPos start,
-      final int vRange,
-      final int hRange,
+      final int vertical,
+      final int horizontal,
       final int yStep,
       final BiPredicate<BlockGetter, BlockPos> predicate)
     {
-        if (vRange < 1 && hRange < 1)
+        if (horizontal < 1 && vertical < 1)
         {
             return null;
         }
@@ -145,9 +145,9 @@ public class DimensionData
         int y = 0;
         int y_offset = yStep;
 
-        for (int i = 0; i < hRange + 2; i++)
+        for (int i = 0; i < vertical + 2; i++)
         {
-            for (int steps = 1; steps <= vRange; steps++)
+            for (int steps = 1; steps <= horizontal; steps++)
             {
                 // Start topleft of middle point
                 temp = start.offset(-steps, y, -steps);
@@ -199,7 +199,7 @@ public class DimensionData
 
             y += y_offset;
 
-            if (start.getY() + y >= WorldUtil.getDimensionMaxHeight(world.dimensionType()) || start.getY() + y <= WorldUtil.getDimensionMinHeight(world.dimensionType()))
+            if (start.getY() + y >= WorldUtil.getDimensionMaxHeight((ServerLevel) world) || start.getY() + y <= WorldUtil.getDimensionMinHeight((ServerLevel) world))
             {
                 return null;
             }

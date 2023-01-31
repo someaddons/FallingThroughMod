@@ -7,7 +7,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
@@ -19,7 +18,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.border.WorldBorder;
-import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -52,10 +50,10 @@ public class EventHandler
 
         if (FallingthroughMod.config.getCommonConfig().enableAboveDimensionTP.get())
         {
-            if (event.player.getY() >= WorldUtil.getDimensionMaxHeight(event.player.level.dimensionType())
-                  || event.player.getY() <= WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()))
+            if (event.player.getY() >= WorldUtil.getDimensionMaxHeight((ServerLevel) event.player.level)
+                  || event.player.getY() <= WorldUtil.getDimensionMinHeight((ServerLevel) event.player.level))
             {
-                tryTpPlayer((ServerPlayer) event.player, event.player.blockPosition().getY() <= WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()));
+                tryTpPlayer((ServerPlayer) event.player, event.player.blockPosition().getY() <= WorldUtil.getDimensionMinHeight((ServerLevel) event.player.level));
                 return;
             }
 
@@ -63,9 +61,9 @@ public class EventHandler
             final DimensionData below = ConfigurationCache.belowToNextDim.get(event.player.level.dimension().location());
 
             final boolean aboveTP =
-              above != null && above.getLeeWay() != 0 && event.player.getY() >= (WorldUtil.getDimensionMaxHeight(event.player.level.dimensionType()) - above.getLeeWay());
+              above != null && above.getLeeWay() != 0 && event.player.getY() >= (WorldUtil.getDimensionMaxHeight((ServerLevel) event.player.level) - above.getLeeWay());
             final boolean belowTP =
-              below != null && below.getLeeWay() != 0 && event.player.getY() <= (WorldUtil.getDimensionMinHeight(event.player.level.dimensionType()) + below.getLeeWay());
+              below != null && below.getLeeWay() != 0 && event.player.getY() <= (WorldUtil.getDimensionMinHeight((ServerLevel) event.player.level) + below.getLeeWay());
 
             if (aboveTP || belowTP)
             {
@@ -146,7 +144,7 @@ public class EventHandler
             }
 
             final ServerPlayer playerEntity = (ServerPlayer) event.getEntity();
-            if (tryTpPlayer(playerEntity, playerEntity.blockPosition().getY() <= WorldUtil.getDimensionMinHeight(playerEntity.level.dimensionType())))
+            if (tryTpPlayer(playerEntity, playerEntity.blockPosition().getY() <= WorldUtil.getDimensionMinHeight((ServerLevel) playerEntity.level)))
             {
                 event.setAmount(0f);
             }
@@ -210,7 +208,7 @@ public class EventHandler
         final WorldBorder worldborder = gotoWorld.getWorldBorder();
         tpPos = worldborder.clampToBounds(tpPos.getX(), tpPos.getY(), tpPos.getZ());
 
-        playerEntity.level.playSound((Player) null,
+        gotoWorld.playSound((Player) null,
           playerEntity.getX(),
           playerEntity.getY(),
           playerEntity.getZ(),

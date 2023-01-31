@@ -1,26 +1,28 @@
 package com.fallingthrough.event;
 
-import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.server.level.ServerLevel;
 
 public class WorldUtil
 {
     /**
      * Returns a dimensions max height
+     *
      * @param dimensionType
      * @return
      */
-    public static int getDimensionMaxHeight(final DimensionType dimensionType)
+    public static int getDimensionMaxHeight(final ServerLevel level)
     {
-        return dimensionType.logicalHeight() + dimensionType.minY();
+        return Math.min(level.getMaxBuildHeight(), level.getMinBuildHeight() + level.getLogicalHeight());
     }
 
     /**
      * Returns a dimension min height
+     *
      * @param dimensionType
      * @return
      */
-    public static int getDimensionMinHeight(final DimensionType dimensionType)
+    public static int getDimensionMinHeight(final ServerLevel level)
     {
-        return dimensionType.minY();
+        return level.getMinBuildHeight();
     }
 }
