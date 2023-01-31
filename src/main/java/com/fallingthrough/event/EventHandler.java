@@ -18,6 +18,8 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -164,6 +166,8 @@ public class EventHandler
             return false;
         }
 
+        playerTpTime.remove(playerEntity.getUUID());
+
         final ServerLevel world = (ServerLevel) playerEntity.level;
 
         DimensionData gotoDim;
@@ -202,6 +206,9 @@ public class EventHandler
         {
             return false;
         }
+
+        final WorldBorder worldborder = gotoWorld.getWorldBorder();
+        tpPos = worldborder.clampToBounds(tpPos.getX(), tpPos.getY(), tpPos.getZ());
 
         playerEntity.level.playSound((Player) null,
           playerEntity.getX(),
