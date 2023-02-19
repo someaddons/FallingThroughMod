@@ -39,6 +39,7 @@ public class EventHandler
      */
     private static final Integer            TP_TIME      = 12;
     private static       Map<UUID, Integer> playerTpTime = new HashMap<>();
+    private static       Map<UUID, Long>    lastTpTime   = new HashMap<>();
 
     @SubscribeEvent
     public static void onPlayerTick(final TickEvent.PlayerTickEvent event)
@@ -144,6 +145,14 @@ public class EventHandler
             }
 
             final ServerPlayer playerEntity = (ServerPlayer) event.getEntity();
+
+            final Integer time = playerTpTime.get(playerEntity.getUUID());
+
+            if (time != null && time < 0)
+            {
+
+            }
+
             if (tryTpPlayer(playerEntity, playerEntity.blockPosition().getY() <= WorldUtil.getDimensionMinHeight((ServerLevel) playerEntity.level)))
             {
                 event.setAmount(0f);
@@ -163,8 +172,6 @@ public class EventHandler
         {
             return false;
         }
-
-        playerTpTime.remove(playerEntity.getUUID());
 
         final ServerLevel world = (ServerLevel) playerEntity.level;
 
@@ -205,11 +212,19 @@ public class EventHandler
             return false;
         }
 
+        final Long lastTime = lastTpTime.get(playerEntity.getUUID());
+        if (lastTime != null && world.getGameTime() - lastTime < 20 * 15)
+        {
+            return false;
+        }
+
+        lastTpTime.put(playerEntity.getUUID(), playerEntity.level.getGameTime());
 
         if (FallingthroughMod.config.getCommonConfig().enableDebuglog.get())
         {
             FallingthroughMod.LOGGER.info(
-              "Teleporting player " + playerEntity.getDisplayName().getString()+"("+ playerEntity.getId() + ") from " + playerEntity.blockPosition().toShortString() + " in " + playerEntity.level.dimension().location()
+              "Teleporting player " + playerEntity.getDisplayName().getString() + "(" + playerEntity.getId() + ") from " + playerEntity.blockPosition().toShortString() + " in "
+                + playerEntity.level.dimension().location()
                 + " to: " + tpPos.toShortString() + " in " + gotoWorld.dimension().location() +
                 " with TP type:" + gotoDim.yspawn);
         }
@@ -222,6 +237,15 @@ public class EventHandler
           playerEntity.getSoundSource(),
           1.0F,
           2F + (FallingthroughMod.rand.nextFloat() - FallingthroughMod.rand.nextFloat()) * 0.2F);
+
+
+        ChunkPos chunkpos = new ChunkPos(tpPos);
+        gotoWorld.getChunkSource().addRegionTicket(TicketType.POST_TELEPORT, chunkpos, 1, playerEntity.getId());
+        playerEntity.stopRiding();
+        if (playerEntity.isSleeping())
+        {
+            playerEntity.stopSleepInBed(true, true);
+        }
 
         playerEntity.teleportTo(gotoWorld, tpPos.getX() + 0.5, tpPos.getY(), tpPos.getZ() + 0.5, playerEntity.getYRot(), playerEntity.getXRot());
         playerEntity.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, FallingthroughMod.config.getCommonConfig().slowFallDuration.get()));
