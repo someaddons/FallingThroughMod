@@ -8,7 +8,6 @@ import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -41,6 +40,7 @@ public class Configuration
         {
             FallingthroughMod.LOGGER.warn("Config not found, recreating default");
             save();
+            load();
         }
         else
         {
@@ -48,13 +48,13 @@ public class Configuration
             {
                 commonConfig.deserialize(gson.fromJson(Files.newBufferedReader(configPath), JsonObject.class));
             }
-            catch (IOException e)
+            catch (Exception e)
             {
                 FallingthroughMod.LOGGER.error("Could not read config from:" + configPath, e);
+                save();
+                load();
             }
         }
-
-        ConfigurationCache.parseConfig();
     }
 
     public void save()
@@ -66,7 +66,7 @@ public class Configuration
             gson.toJson(commonConfig.serialize(), JsonObject.class, writer);
             writer.close();
         }
-        catch (IOException e)
+        catch (Exception e)
         {
             FallingthroughMod.LOGGER.error("Could not write config to:" + configPath, e);
         }

@@ -4,109 +4,98 @@ import com.fallingthrough.FallingthroughMod;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static net.minecraft.world.level.Level.*;
 
 public class CommonConfiguration
 {
-    public List<String> belowDimension         = Arrays.asList("minecraft:overworld;minecraft:the_nether;8;8;AIR;4",
-      "minecraft:the_end;minecraft:overworld;1;1;AIR;0",
-      "minecraft:the_nether;minecraft:the_nether;1;1;CAVE;0");
-    public List<String> aboveDimension         = Arrays.asList("minecraft:the_nether;minecraft:overworld;0.125;0.125;CAVE;4",
-      "minecraft:overworld;minecraft:overworld;0.8;0.8;AIR;0");
-    public boolean      enableAboveDimensionTP = true;
-    public int          slowFallDuration       = 400;
+    private final static String DIMENSIONCON = "dimensionconnections";
+
+    public Map<ResourceLocation, List<DimensionData>> dimensionConnections = new HashMap<>();
+    private List<DimensionData> dimensionDataList = new ArrayList<>();
+    public boolean debuglogging = false;
 
     protected CommonConfiguration()
     {
+        final DimensionData owToNether = new DimensionData(OVERWORLD.location(), Level.NETHER.location(), DimensionData.SPAWNTYPE.AIR);
+        owToNether.belowY = -60;
+        owToNether.xMult = 1.0 / 8;
+        owToNether.zMult = 1.0 / 8;
+        owToNether.slowFallDuration = 400;
+        owToNether.teleportToYlevel = 125;
+        dimensionDataList.add(owToNether);
 
+        final DimensionData endToOw = new DimensionData(END.location(), OVERWORLD.location(), DimensionData.SPAWNTYPE.AIR);
+        endToOw.belowY = 0;
+        endToOw.slowFallDuration = 400;
+        endToOw.teleportToYlevel = 300;
+        dimensionDataList.add(endToOw);
+
+        final DimensionData netherToNether = new DimensionData(NETHER.location(), NETHER.location(), DimensionData.SPAWNTYPE.CAVE);
+        netherToNether.belowY = 0;
+        netherToNether.teleportToYlevel = 4;
+        dimensionDataList.add(netherToNether);
+
+        final DimensionData netherToOw = new DimensionData(NETHER.location(), OVERWORLD.location(), DimensionData.SPAWNTYPE.CAVE);
+        netherToOw.aboveY = 121;
+        netherToOw.xMult = 8;
+        netherToOw.zMult = 8;
+        netherToOw.teleportToYlevel = -60;
+        dimensionDataList.add(netherToOw);
+
+        final DimensionData owToOw = new DimensionData(OVERWORLD.location(), OVERWORLD.location(), DimensionData.SPAWNTYPE.AIR);
+        owToOw.aboveY = 364;
+        owToOw.teleportToYlevel = 360;
+        owToNether.slowFallDuration = 400;
+        dimensionDataList.add(owToOw);
     }
 
     public JsonObject serialize()
     {
         final JsonObject root = new JsonObject();
 
-        final JsonObject entry1 = new JsonObject();
-        entry1.addProperty("desc:", "List of dimension connections for players going below a dimension  "
-                                      + "Format: FromDimension,ToDimension,XCoordDivider, ZCoordDivider, Y-SpawnType, DimensionBorderTPDistance  "
-                                      + "FromDimension and ToDimension are ID's of dimensions, e.g. minecraft:overworld  "
-                                      + "X and Z Coord dividers are values by which the original player coordinates are divided by  "
-                                      + "Y-SpawnType is one of these: AIR,GROUND,CAVE  "
-                                      + "AIR spawns the player as high as possible to the dimensions max height within airblocks.  "
-                                      + "GROUND spawns the player on the normal groundlevel,  "
-                                      + "CAVE spawns the player in the first open space going from 0 up.  "
-                                      + "DimensionBorderTPDistance: Distance from the dimensions border at which the teleport starts  "
-                                      + "Use [first,second] to list multiple entries.");
-        final JsonArray list1 = new JsonArray();
-        for (final String name : belowDimension)
-        {
-            list1.add(name);
-        }
-        entry1.add("belowDimension", list1);
-        root.add("belowDimension", entry1);
-
         final JsonObject entry2 = new JsonObject();
-        entry2.addProperty("desc:", "Turn on teleporting when going above dimension height");
-        entry2.addProperty("enableAboveDimensionTP", enableAboveDimensionTP);
-        root.add("enableAboveDimensionTP", entry2);
+        entry2.addProperty("desc:", "Enable debug logging, default:false");
+        entry2.addProperty("debuglogging", debuglogging);
+        root.add("debuglogging", entry2);
 
-        final JsonObject entry3 = new JsonObject();
-        entry3.addProperty("desc:", "Requires enableAboveDimensionTP to be enabled! " +
-                                      "List of dimension connections for players going above a dimension "
-                                      + "Format: FromDimension,ToDimension,XCoordDivider, ZCoordDivider, Y-SpawnType, DimensionBorderTPDistance "
-                                      + "FromDimension and ToDimension are ID's of dimensions, e.g. minecraft:overworld "
-                                      + "X and Z Coord dividers are values by which the original player coordinates are divided by "
-                                      + "Y-SpawnType is one of these: AIR,GROUND,CAVE "
-                                      + "AIR spawns the player as high as possible to the dimensions max height within airblocks. "
-                                      + "GROUND spawns the player on the normal groundlevel, "
-                                      + "CAVE spawns the player in the first open space going from 0 up. "
-                                      + "DimensionBorderTPDistance: Distance from the dimensions border at which the teleport starts "
-                                      + "Use [first,second] to list multiple entries.");
-        final JsonArray list3 = new JsonArray();
-        for (final String name : aboveDimension)
+        final JsonArray list1 = new JsonArray();
+        for (final DimensionData data : dimensionDataList)
         {
-            list3.add(name);
+            list1.add(data.serialize());
         }
-        entry3.add("aboveDimension", list3);
-        root.add("aboveDimension", entry3);
-
-        final JsonObject entry4 = new JsonObject();
-        entry4.addProperty("desc:", "Duration of the slowfall potion after teleporting, default: 400 ticks (20 ticks = 1 second)");
-        entry4.addProperty("slowFallDuration", slowFallDuration);
-        root.add("slowFallDuration", entry4);
+        root.add(DIMENSIONCON, list1);
 
         return root;
     }
 
     public void deserialize(JsonObject data)
     {
-        if (data == null)
-        {
-            FallingthroughMod.LOGGER.error("Config file was empty!");
-            return;
-        }
-
         try
         {
-            enableAboveDimensionTP = data.get("enableAboveDimensionTP").getAsJsonObject().get("enableAboveDimensionTP").getAsBoolean();
-            slowFallDuration = data.get("slowFallDuration").getAsJsonObject().get("slowFallDuration").getAsInt();
-            belowDimension = new ArrayList<>();
-            for (final JsonElement element : data.get("belowDimension").getAsJsonObject().get("belowDimension").getAsJsonArray())
-            {
-                belowDimension.add(element.getAsString());
-            }
+            debuglogging = data.get("debuglogging").getAsJsonObject().get("debuglogging").getAsBoolean();
 
-            aboveDimension = new ArrayList<>();
-            for (final JsonElement element : data.get("aboveDimension").getAsJsonObject().get("aboveDimension").getAsJsonArray())
+            final JsonArray dimensionData = data.get(DIMENSIONCON).getAsJsonArray();
+            dimensionDataList.clear();
+            dimensionConnections.clear();
+            for (final JsonElement element : dimensionData)
             {
-                aboveDimension.add(element.getAsString());
+                final DimensionData newData = new DimensionData((JsonObject) element);
+                dimensionDataList.add(newData);
+                dimensionConnections.computeIfAbsent(newData.from, n -> new ArrayList<>()).add(newData);
             }
         }
         catch (Exception e)
         {
             FallingthroughMod.LOGGER.error("Could not parse config file", e);
+            throw e;
         }
     }
 }

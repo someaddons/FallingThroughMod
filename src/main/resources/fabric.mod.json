@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "fallingthrough",
+  "id": "forgivingworld",
   "version": "${version}",
 
-  "name": "Fallingthrough Mod",
+  "name": "Forgiving World Mod",
   "description": "Connects dimension boundaries with eachother",
   "authors": [
     "Someaddons"
@@ -23,7 +23,7 @@
     ]
   },
   "mixins": [
-    "fallingthrough.mixins.json"
+    "forgivingworld.mixins.json"
   ],
 
   "depends": {
