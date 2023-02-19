@@ -1,12 +1,10 @@
-package com.fallingthrough.config;
+package com.forgivingworld.config;
 
-import com.fallingthrough.FallingthroughMod;
-import com.fallingthrough.event.WorldUtil;
+import com.google.gson.JsonObject;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Material;
@@ -18,46 +16,146 @@ import java.util.function.BiPredicate;
  */
 public class DimensionData
 {
+    private final static String FROM_DIM       = "from";
+    private final static String TO_DIM         = "to";
+    private final static String X_MULT         = "xcoordmultiplier";
+    private final static String Z_MULT         = "zcoordmultiplier";
+    private final static String TP_TYPE        = "teleporttype";
+    private final static String TP_TYPE_YLEVEL = "teleport_to_y";
+    private final static String BELOWY         = "belowy";
+    private final static String ABOVEY         = "abovey";
+    private final static String SLOW_FALL      = "slowfallticks";
+
     /**
      * Dimension id we go to
      */
-    private final ResourceLocation id;
+    public final ResourceLocation from;
+    /**
+     * Dimension id we go to
+     */
+    public final ResourceLocation to;
 
     /**
      * Coordinate modifiers
      */
-    public double xDivider = 1.0d;
-    public double zDivider = 1.0d;
-    private int    leeWay   = 0;
+    public double xMult  = 1.0d;
+    public double zMult  = 1.0d;
+    public int    aboveY = Integer.MAX_VALUE;
+    public int    belowY = Integer.MIN_VALUE;
+
+    public int slowFallDuration = 0;
+
+    public int teleportToYlevel = 0;
 
     /**
      * Y-spawn selector
      */
-    public YSPAWN yspawn = YSPAWN.AIR;
+    public final SPAWNTYPE yspawn;
 
-    public DimensionData(final ResourceLocation id)
+    public DimensionData(final ResourceLocation from, final ResourceLocation to, final SPAWNTYPE yspawn)
     {
-        this.id = id;
+        this.from = from;
+        this.to = to;
+        this.yspawn = yspawn;
     }
 
-    /**
-     * Get Dimension id
-     *
-     * @return
-     */
-    public ResourceLocation getID()
+    public DimensionData(final JsonObject data)
     {
-        return id;
+        from = ResourceLocation.tryParse(data.get(FROM_DIM).getAsString());
+        to = ResourceLocation.tryParse(data.get(TO_DIM).getAsString());
+
+        if (data.has(X_MULT))
+        {
+            xMult = data.get(X_MULT).getAsDouble();
+        }
+        if (data.has(Z_MULT))
+        {
+            zMult = data.get(Z_MULT).getAsDouble();
+        }
+
+        yspawn = SPAWNTYPE.fromString(data.get(TP_TYPE).getAsJsonObject().get(TP_TYPE).getAsString());
+        teleportToYlevel = data.get(TP_TYPE).getAsJsonObject().get(TP_TYPE_YLEVEL).getAsInt();
+
+        if (data.has(BELOWY))
+        {
+            belowY = data.get(BELOWY).getAsInt();
+        }
+        if (data.has(ABOVEY))
+        {
+            aboveY = data.get(ABOVEY).getAsInt();
+        }
+
+        if (data.has(SLOW_FALL))
+        {
+            slowFallDuration = data.get(SLOW_FALL).getAsInt();
+        }
+    }
+
+    public JsonObject serialize()
+    {
+        final JsonObject data = new JsonObject();
+        data.addProperty(FROM_DIM, from.toString());
+        data.addProperty(TO_DIM, to.toString());
+        if (xMult != 1.0 || zMult != 1.0)
+        {
+            data.addProperty(X_MULT, xMult);
+            data.addProperty(Z_MULT, zMult);
+        }
+
+        final JsonObject spawndata = new JsonObject();
+        spawndata.addProperty(TP_TYPE, yspawn.toString());
+        spawndata.addProperty(TP_TYPE_YLEVEL, teleportToYlevel);
+        data.add(TP_TYPE, spawndata);
+
+        if (belowY != Integer.MIN_VALUE)
+        {
+            data.addProperty(BELOWY, belowY);
+        }
+
+        if (aboveY != Integer.MAX_VALUE)
+        {
+            data.addProperty(ABOVEY, aboveY);
+        }
+
+        if (slowFallDuration != 0)
+        {
+            data.addProperty(SLOW_FALL, slowFallDuration);
+        }
+
+        return data;
+    }
+
+    public boolean shouldTP(final double y)
+    {
+        return y < belowY || y > aboveY;
     }
 
     /**
      * Y-Spawn types
      */
-    private enum YSPAWN
+    public enum SPAWNTYPE
     {
         AIR,
         GROUND,
         CAVE;
+
+        public static SPAWNTYPE fromString(String data)
+        {
+            if (data.toLowerCase().trim().equals("air"))
+            {
+                return AIR;
+            }
+            if (data.toLowerCase().trim().equals("ground"))
+            {
+                return GROUND;
+            }
+            if (data.toLowerCase().trim().equals("cave"))
+            {
+                return CAVE;
+            }
+
+            throw new IllegalArgumentException("Unkown TP type: " + data + " expected one of air,ground,cave");
+        }
     }
 
     /**
@@ -68,7 +166,7 @@ public class DimensionData
      */
     public BlockPos translatePosition(final BlockPos original)
     {
-        return new BlockPos(original.getX() / xDivider, original.getY(), original.getZ() / zDivider);
+        return new BlockPos(original.getX() * xMult, original.getY(), original.getZ() * zMult);
     }
 
     /**
@@ -79,21 +177,21 @@ public class DimensionData
      * @param zOriginal // 115.3x -242.3z
      * @return position to put the player at
      */
-    public BlockPos getSpawnPos(final LevelAccessor world, double xOriginal, double zOriginal)
+    public BlockPos getSpawnPos(final ServerLevel world, double xOriginal, double zOriginal)
     {
-        xOriginal = (xOriginal / xDivider);
-        zOriginal = (zOriginal / zDivider);
+        xOriginal = (xOriginal * xMult);
+        zOriginal = (zOriginal * zMult);
 
         switch (yspawn)
         {
             case AIR:
                 final BlockPos solidAir =
-                  findAround(world, new BlockPos(xOriginal, WorldUtil.getDimensionMaxHeight((ServerLevel) world) - (4 + leeWay), zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
+                  findAround(world, new BlockPos(xOriginal, teleportToYlevel, zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
                 if (solidAir != null)
                 {
                     return solidAir;
                 }
-                return findAround(world, new BlockPos(xOriginal, WorldUtil.getDimensionMaxHeight((ServerLevel) world) - (4 + leeWay), zOriginal), 4, 50, -2, DOUBLE_AIR);
+                return findAround(world, new BlockPos(xOriginal, teleportToYlevel, zOriginal), 20, 50, -2, DOUBLE_AIR);
             case GROUND:
                 // Load chunk
                 final ChunkAccess targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);
@@ -104,7 +202,7 @@ public class DimensionData
                   2,
                   DOUBLE_AIR);
             case CAVE:
-                return findAround(world, new BlockPos(xOriginal, WorldUtil.getDimensionMinHeight((ServerLevel) world) + 6 + leeWay, zOriginal), 20, 50, 2, DOUBLE_AIR_GROUND);
+                return findAround(world, new BlockPos(xOriginal, teleportToYlevel, zOriginal), 20, 50, 2, DOUBLE_AIR_GROUND);
         }
 
         return null;
@@ -129,7 +227,7 @@ public class DimensionData
      * @return
      */
     public static BlockPos findAround(
-      final LevelAccessor world,
+      final ServerLevel world,
       final BlockPos start,
       final int vertical,
       final int horizontal,
@@ -198,67 +296,8 @@ public class DimensionData
             }
 
             y += y_offset;
-
-            if (start.getY() + y >= WorldUtil.getDimensionMaxHeight((ServerLevel) world) || start.getY() + y <= WorldUtil.getDimensionMinHeight((ServerLevel) world))
-            {
-                return null;
-            }
         }
 
         return null;
-    }
-
-    public static DimensionData parse(final String[] splitData)
-    {
-        final ResourceLocation id = ResourceLocation.tryParse(splitData[1]);
-        if (id == null)
-        {
-            FallingthroughMod.LOGGER.warn("Error parsing config second dimension: " + splitData[1]);
-            return null;
-        }
-
-        final DimensionData data = new DimensionData(id);
-        try
-        {
-            data.xDivider = Double.parseDouble(splitData[2]);
-        }
-        catch (Exception e)
-        {
-            FallingthroughMod.LOGGER.warn("Error parsing config xDivider: " + splitData[2]);
-        }
-
-        try
-        {
-            data.zDivider = Double.parseDouble(splitData[3]);
-        }
-        catch (Exception e)
-        {
-            FallingthroughMod.LOGGER.warn("Error parsing config second zDivider: " + splitData[3]);
-        }
-
-        try
-        {
-            data.yspawn = YSPAWN.valueOf(splitData[4]);
-        }
-        catch (Exception e)
-        {
-            FallingthroughMod.LOGGER.warn("Error parsing config second y spawn positions setting, should be one of :AIR,GROUND,CAVE: " + splitData[4]);
-        }
-
-        try
-        {
-            data.leeWay = Integer.parseInt(splitData[5]);
-        }
-        catch (Exception e)
-        {
-            FallingthroughMod.LOGGER.warn("Error parsing config for dimension tp distance , should be a number: " + splitData[5]);
-        }
-
-        return data;
-    }
-
-    public int getLeeWay()
-    {
-        return leeWay;
     }
 }
