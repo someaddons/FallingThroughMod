@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
@@ -136,7 +137,7 @@ public class EventHandler
     @SubscribeEvent
     public static void onVoidDamageRecv(final LivingHurtEvent event)
     {
-        if (event.getSource() == DamageSource.OUT_OF_WORLD)
+        if (event.getSource().is(DamageTypes.OUT_OF_WORLD))
         {
             if (!(event.getEntity() instanceof Player) || event.getEntity().level.isClientSide)
             {

@@ -166,7 +166,7 @@ public class DimensionData
      */
     public BlockPos translatePosition(final BlockPos original)
     {
-        return new BlockPos(original.getX() * xMult, original.getY(), original.getZ() * zMult);
+        return new BlockPos((int) (original.getX() * xMult), original.getY(), (int) (original.getZ() * zMult));
     }
 
     /**
@@ -186,23 +186,23 @@ public class DimensionData
         {
             case AIR:
                 final BlockPos solidAir =
-                  findAround(world, new BlockPos(xOriginal, teleportToYlevel, zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
+                  findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
                 if (solidAir != null)
                 {
                     return solidAir;
                 }
-                return findAround(world, new BlockPos(xOriginal, teleportToYlevel, zOriginal), 20, 50, -2, DOUBLE_AIR);
+                return findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 20, 50, -2, DOUBLE_AIR);
             case GROUND:
                 // Load chunk
                 final ChunkAccess targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);
                 return findAround(world,
-                  new BlockPos(xOriginal, targetChunk.getHeight(Heightmap.Types.WORLD_SURFACE, (int) Math.floor(xOriginal), (int) Math.floor(zOriginal)), zOriginal),
+                  new BlockPos((int) xOriginal, targetChunk.getHeight(Heightmap.Types.WORLD_SURFACE, (int) Math.floor(xOriginal), (int) Math.floor(zOriginal)), (int) zOriginal),
                   20,
                   50,
                   2,
                   DOUBLE_AIR);
             case CAVE:
-                return findAround(world, new BlockPos(xOriginal, teleportToYlevel, zOriginal), 20, 50, 2, DOUBLE_AIR_GROUND);
+                return findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 20, 50, 2, DOUBLE_AIR_GROUND);
         }
 
         return null;
