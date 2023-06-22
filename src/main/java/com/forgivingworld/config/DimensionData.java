@@ -7,7 +7,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.material.Material;
 
 import java.util.function.BiPredicate;
 
@@ -212,8 +211,8 @@ public class DimensionData
      * Predicate for pos selection
      */
     final BiPredicate<BlockGetter, BlockPos> DOUBLE_AIR        =
-      (world, pos) -> world.getBlockState(pos).getMaterial() == Material.AIR && world.getBlockState(pos.above()).getMaterial() == Material.AIR;
-    final BiPredicate<BlockGetter, BlockPos> DOUBLE_AIR_GROUND = DOUBLE_AIR.and((world, pos) -> world.getBlockState(pos.below()).getMaterial().isSolid());
+      (world, pos) -> world.getBlockState(pos).isAir() && world.getBlockState(pos.above()).isAir();
+    final BiPredicate<BlockGetter, BlockPos> DOUBLE_AIR_GROUND = DOUBLE_AIR.and((world, pos) -> world.getBlockState(pos.below()).isSolid());
 
     /**
      * Finds a nice position around
