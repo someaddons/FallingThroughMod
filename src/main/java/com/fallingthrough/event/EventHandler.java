@@ -37,18 +37,18 @@ public class EventHandler
 
     public static void onPlayerTick(final Player player)
     {
-        if (player.level.isClientSide() || player.level.getGameTime() % 80 != 0 || player.isRemoved())
+        if (player.level().isClientSide() || player.level().getGameTime() % 80 != 0 || player.isRemoved())
         {
             return;
         }
 
         final Long lastTime = lastTpTime.get(player.getUUID());
-        if (lastTime != null && player.level.getGameTime() - lastTime < 20 * 15)
+        if (lastTime != null && player.level().getGameTime() - lastTime < 20 * 15)
         {
             return;
         }
 
-        final List<DimensionData> dimensionTPs = FallingthroughMod.config.getCommonConfig().dimensionConnections.get(player.level.dimension().location());
+        final List<DimensionData> dimensionTPs = FallingthroughMod.config.getCommonConfig().dimensionConnections.get(player.level().dimension().location());
 
         if (dimensionTPs == null || dimensionTPs.isEmpty())
         {
@@ -96,11 +96,11 @@ public class EventHandler
 
 
             ServerLevel gotoWorld = null;
-            for (final ResourceKey<Level> key : player.level.getServer().levelKeys())
+            for (final ResourceKey<Level> key : player.level().getServer().levelKeys())
             {
                 if (key.location().equals(tp.to))
                 {
-                    gotoWorld = player.level.getServer().getLevel(key);
+                    gotoWorld = player.level().getServer().getLevel(key);
                     break;
                 }
             }
@@ -112,7 +112,7 @@ public class EventHandler
             }
         }
 
-        player.level.playSound(null,
+        player.level().playSound(null,
           player.getX(),
           player.getY(),
           player.getZ(),
@@ -132,16 +132,16 @@ public class EventHandler
 
     public static void onVoidDamageRecv(final Player player, final CallbackInfoReturnable<Boolean> cir, final DamageSource damageSource)
     {
-        if (damageSource.is(DamageTypes.OUT_OF_WORLD))
+        if (damageSource.is(DamageTypes.FELL_OUT_OF_WORLD))
         {
-            if (player.level.isClientSide)
+            if (player.level().isClientSide)
             {
                 return;
             }
 
             final ServerPlayer playerEntity = (ServerPlayer) player;
 
-            final List<DimensionData> dimensions = FallingthroughMod.config.getCommonConfig().dimensionConnections.get(player.level.dimension().location());
+            final List<DimensionData> dimensions = FallingthroughMod.config.getCommonConfig().dimensionConnections.get(player.level().dimension().location());
 
             if (dimensions == null || dimensions.isEmpty())
             {
@@ -172,7 +172,7 @@ public class EventHandler
             return false;
         }
 
-        final ServerLevel world = (ServerLevel) playerEntity.level;
+        final ServerLevel world = (ServerLevel) playerEntity.level();
 
         if (gotoDim == null || !gotoDim.shouldTP(playerEntity.getY()))
         {
@@ -207,13 +207,13 @@ public class EventHandler
             return false;
         }
 
-        lastTpTime.put(playerEntity.getUUID(), playerEntity.level.getGameTime());
+        lastTpTime.put(playerEntity.getUUID(), playerEntity.level().getGameTime());
 
         if (FallingthroughMod.config.getCommonConfig().debuglogging)
         {
             FallingthroughMod.LOGGER.info(
               "Teleporting player " + playerEntity.getDisplayName().getString() + "(" + playerEntity.getId() + ") from " + playerEntity.blockPosition().toShortString() + " in "
-                + playerEntity.level.dimension().location()
+                + playerEntity.level().dimension().location()
                 + " to: " + tpPos.toShortString() + " in " + gotoWorld.dimension().location() +
                 " with TP type:" + gotoDim.yspawn);
         }
@@ -234,7 +234,7 @@ public class EventHandler
 
         playerEntity.fallDistance = 0;
 
-        playerEntity.level.playSound(null,
+        playerEntity.level().playSound(null,
           playerEntity.getX(),
           playerEntity.getY(),
           playerEntity.getZ(),
