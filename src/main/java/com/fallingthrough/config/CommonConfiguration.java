@@ -1,5 +1,6 @@
 package com.fallingthrough.config;
 
+import com.cupboard.config.ICommonConfig;
 import com.fallingthrough.FallingthroughMod;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -14,7 +15,7 @@ import java.util.Map;
 
 import static net.minecraft.world.level.Level.*;
 
-public class CommonConfiguration
+public class CommonConfiguration implements ICommonConfig
 {
     private final static String DIMENSIONCON = "dimensionconnections";
 
@@ -22,7 +23,7 @@ public class CommonConfiguration
     private List<DimensionData> dimensionDataList = new ArrayList<>();
     public boolean debuglogging = false;
 
-    protected CommonConfiguration()
+    public CommonConfiguration()
     {
         final DimensionData owToNether = new DimensionData(OVERWORLD.location(), Level.NETHER.location(), DimensionData.SPAWNTYPE.AIR);
         owToNether.belowY = -60;
@@ -78,8 +79,6 @@ public class CommonConfiguration
 
     public void deserialize(JsonObject data)
     {
-        try
-        {
             debuglogging = data.get("debuglogging").getAsJsonObject().get("debuglogging").getAsBoolean();
 
             final JsonArray dimensionData = data.get(DIMENSIONCON).getAsJsonArray();
@@ -91,11 +90,6 @@ public class CommonConfiguration
                 dimensionDataList.add(newData);
                 dimensionConnections.computeIfAbsent(newData.from, n -> new ArrayList<>()).add(newData);
             }
-        }
-        catch (Exception e)
-        {
-            FallingthroughMod.LOGGER.error("Could not parse config file", e);
-            throw e;
-        }
+
     }
 }
