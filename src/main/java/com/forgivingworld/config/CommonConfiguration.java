@@ -1,6 +1,6 @@
 package com.forgivingworld.config;
 
-import com.forgivingworld.ForgivingWorldMod;
+import com.cupboard.config.ICommonConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -14,15 +14,15 @@ import java.util.Map;
 
 import static net.minecraft.world.level.Level.*;
 
-public class CommonConfiguration
+public class CommonConfiguration implements ICommonConfig
 {
     private final static String DIMENSIONCON = "dimensionconnections";
 
-    public Map<ResourceLocation, List<DimensionData>> dimensionConnections = new HashMap<>();
-    private List<DimensionData> dimensionDataList = new ArrayList<>();
-    public boolean debuglogging = false;
+    public  Map<ResourceLocation, List<DimensionData>> dimensionConnections = new HashMap<>();
+    private List<DimensionData>                        dimensionDataList    = new ArrayList<>();
+    public  boolean                                    debuglogging         = false;
 
-    protected CommonConfiguration()
+    public CommonConfiguration()
     {
         final DimensionData owToNether = new DimensionData(OVERWORLD.location(), Level.NETHER.location(), DimensionData.SPAWNTYPE.AIR);
         owToNether.belowY = -60;
@@ -78,24 +78,16 @@ public class CommonConfiguration
 
     public void deserialize(JsonObject data)
     {
-        try
-        {
-            debuglogging = data.get("debuglogging").getAsJsonObject().get("debuglogging").getAsBoolean();
+        debuglogging = data.get("debuglogging").getAsJsonObject().get("debuglogging").getAsBoolean();
 
-            final JsonArray dimensionData = data.get(DIMENSIONCON).getAsJsonArray();
-            dimensionDataList.clear();
-            dimensionConnections.clear();
-            for (final JsonElement element : dimensionData)
-            {
-                final DimensionData newData = new DimensionData((JsonObject) element);
-                dimensionDataList.add(newData);
-                dimensionConnections.computeIfAbsent(newData.from, n -> new ArrayList<>()).add(newData);
-            }
-        }
-        catch (Exception e)
+        final JsonArray dimensionData = data.get(DIMENSIONCON).getAsJsonArray();
+        dimensionDataList.clear();
+        dimensionConnections.clear();
+        for (final JsonElement element : dimensionData)
         {
-            ForgivingWorldMod.LOGGER.error("Could not parse config file", e);
-            throw e;
+            final DimensionData newData = new DimensionData((JsonObject) element);
+            dimensionDataList.add(newData);
+            dimensionConnections.computeIfAbsent(newData.from, n -> new ArrayList<>()).add(newData);
         }
     }
 }
