@@ -99,6 +99,8 @@ dependencies {
    // implementation fg.deobf("curse.maven:ampnether-552176:3683373")
 
     annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+    implementation fg.deobf("curse.maven:cupboard-326652:4669193")
+
 }
 
 jar {
