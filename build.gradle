@@ -96,6 +96,7 @@ dependencies {
 
     annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
     implementation fg.deobf("curse.maven:cupboard-326652:4669193")
+    implementation fg.deobf("curse.maven:amp-552176:4631016")
 
 }
 
