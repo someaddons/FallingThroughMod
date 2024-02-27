@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "forgivingworld.refmap.json",
   "mixins": [
+    "PlayerPortalCheck"
   ],
   "client": [
   ],

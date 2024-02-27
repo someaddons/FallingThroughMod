@@ -4,6 +4,7 @@ import com.forgivingworld.ForgivingWorldMod;
 import com.forgivingworld.config.DimensionData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -13,9 +14,13 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -85,16 +90,18 @@ public class EventHandler
         time += 1;
         playerTpTime.put(player.getUUID(), time);
 
+        ((ServerLevel)player.level()).sendParticles(ParticleTypes.SOUL_FIRE_FLAME,player.getX(), player.getY()+1, player.getZ(), 50, 1, 0.5,1, 0.05);
+
         if (time == 1)
         {
-            player.sendSystemMessage(Component.literal("Dimensional forces are starting to affect you, pulling you " + (player.getY() > tp.aboveY ? "up" : "down") + ", take care!")
+            player.sendSystemMessage(Component.translatable((player.getY() > tp.aboveY ? "forgivingworld.pullup" : "forgivingworld.pulldown"))
               .withStyle(
                 ChatFormatting.DARK_AQUA));
         }
 
         if (time == 6)
         {
-            player.sendSystemMessage(Component.literal("Dimensional forces are getting stronger...").withStyle(
+            player.sendSystemMessage(Component.translatable("forgivingworld.teleportsoon").withStyle(
               ChatFormatting.DARK_PURPLE));
 
 
@@ -111,7 +118,7 @@ public class EventHandler
             if (gotoWorld != null)
             {
                 final ChunkPos dimensionPos = new ChunkPos(tp.translatePosition(player.blockPosition()));
-                gotoWorld.getChunkSource().addRegionTicket(TELEPORT_TICKET, dimensionPos, 10, dimensionPos);
+                gotoWorld.getChunkSource().addRegionTicket(TELEPORT_TICKET, dimensionPos, 2, dimensionPos);
             }
         }
 
@@ -224,19 +231,63 @@ public class EventHandler
 
         ChunkPos chunkpos = new ChunkPos(tpPos);
         gotoWorld.getChunkSource().addRegionTicket(TicketType.POST_TELEPORT, chunkpos, 1, playerEntity.getId());
-        playerEntity.stopRiding();
+
+        Entity vehicle = playerEntity.getVehicle();
+        if (vehicle != null && ForgivingWorldMod.config.getCommonConfig().teleportedRidden)
+        {
+            playerEntity.stopRiding();
+
+            vehicle = dimensionTPEntity(vehicle, gotoWorld, tpPos.getX() + 0.5, tpPos.getY() + 1, tpPos.getZ() + 0.5, gotoDim.slowFallDuration);
+        }
+
+        final List<Mob> leashedMobs = new ArrayList<>();
+
+        if (ForgivingWorldMod.config.getCommonConfig().teleportLeashed)
+        {
+            for (Mob mob : world.getEntitiesOfClass(Mob.class,
+              new AABB(playerEntity.getX() - 7.0D,
+                playerEntity.getY() - 7.0D,
+                playerEntity.getZ() - 7.0D,
+                playerEntity.getX() + 7.0D,
+                playerEntity.getY() + 7.0D,
+                playerEntity.getZ() + 7.0D)))
+            {
+                if (mob.getLeashHolder() == playerEntity)
+                {
+                    final Entity entity = dimensionTPEntity(mob, gotoWorld, tpPos.getX() + 0.5, tpPos.getY() + 1, tpPos.getZ() + 0.5, gotoDim.slowFallDuration);
+                    if (entity instanceof Mob)
+                    {
+                        leashedMobs.add((Mob) entity);
+                    }
+                }
+            }
+        }
+
         if (playerEntity.isSleeping())
         {
             playerEntity.stopSleepInBed(true, true);
         }
 
+        boolean prev = ForgivingWorldMod.config.getCommonConfig().disableVanillaPortals;
+        ForgivingWorldMod.config.getCommonConfig().disableVanillaPortals = false;
         playerEntity.teleportTo(gotoWorld, tpPos.getX() + 0.5, tpPos.getY(), tpPos.getZ() + 0.5, playerEntity.getYRot(), playerEntity.getXRot());
+        ForgivingWorldMod.config.getCommonConfig().disableVanillaPortals = prev;
         if (gotoDim.slowFallDuration > 0)
         {
             playerEntity.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, gotoDim.slowFallDuration));
         }
 
         playerEntity.fallDistance = 0;
+
+        if (vehicle != null)
+        {
+            playerEntity.startRiding(vehicle);
+        }
+
+        for (final Mob mob : leashedMobs)
+        {
+            mob.setLeashedTo(playerEntity, true);
+        }
 
         playerEntity.level().playSound(null,
           playerEntity.getX(),
@@ -248,5 +299,27 @@ public class EventHandler
           2F + (ForgivingWorldMod.rand.nextFloat() - ForgivingWorldMod.rand.nextFloat()) * 0.2F);
 
         return true;
+    }
+
+    private static Entity dimensionTPEntity(final Entity original, final ServerLevel gotoWorld, final double x, final double y, final double z, final int slowFallDuration)
+    {
+        Entity entity = original.getType().create(gotoWorld);
+        if (entity != null)
+        {
+            entity.restoreFrom(original);
+            original.remove(Entity.RemovalReason.CHANGED_DIMENSION);
+            if (slowFallDuration > 0 && entity instanceof Mob)
+            {
+                ((Mob) entity).addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, slowFallDuration));
+            }
+
+            entity.moveTo(x, y, z, entity.getYRot(), entity.getXRot());
+            entity.setDeltaMovement(Vec3.ZERO);
+            gotoWorld.getChunk((int)x >> 4, (int)z >> 4);
+            gotoWorld.addDuringTeleport(entity);
+            return entity;
+        }
+
+        return null;
     }
 }

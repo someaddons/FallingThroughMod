@@ -20,6 +20,9 @@ public class CommonConfiguration implements ICommonConfig
 
     public  Map<ResourceLocation, List<DimensionData>> dimensionConnections = new HashMap<>();
     private List<DimensionData>                        dimensionDataList    = new ArrayList<>();
+    public  boolean                                    disableVanillaPortals         = false;
+    public  boolean                                    teleportLeashed         = true;
+    public  boolean                                    teleportedRidden         = true;
     public  boolean                                    debuglogging         = false;
 
     public CommonConfiguration()
@@ -62,9 +65,24 @@ public class CommonConfiguration implements ICommonConfig
         final JsonObject root = new JsonObject();
 
         final JsonObject entry2 = new JsonObject();
-        entry2.addProperty("desc:", "Enable debug logging, default:false");
-        entry2.addProperty("debuglogging", debuglogging);
-        root.add("debuglogging", entry2);
+        entry2.addProperty("desc:", "Disables vanilla portals, default:false");
+        entry2.addProperty("disableVanillaPortals", disableVanillaPortals);
+        root.add("disableVanillaPortals", entry2);
+
+        final JsonObject entry4 = new JsonObject();
+        entry4.addProperty("desc:", "Teleport ridden entities too, default:true");
+        entry4.addProperty("teleportedRidden", teleportedRidden);
+        root.add("teleportedRidden", entry4);
+
+        final JsonObject entry5 = new JsonObject();
+        entry5.addProperty("desc:", "Teleport leashed entities too, default:true");
+        entry5.addProperty("teleportLeashed", teleportLeashed);
+        root.add("teleportLeashed", entry5);
+
+        final JsonObject entry3 = new JsonObject();
+        entry3.addProperty("desc:", "Enable debug logging, default:false");
+        entry3.addProperty("debuglogging", debuglogging);
+        root.add("debuglogging", entry3);
 
         final JsonArray list1 = new JsonArray();
         for (final DimensionData data : dimensionDataList)
@@ -79,6 +97,9 @@ public class CommonConfiguration implements ICommonConfig
     public void deserialize(JsonObject data)
     {
         debuglogging = data.get("debuglogging").getAsJsonObject().get("debuglogging").getAsBoolean();
+        disableVanillaPortals = data.get("disableVanillaPortals").getAsJsonObject().get("disableVanillaPortals").getAsBoolean();
+        teleportedRidden = data.get("teleportedRidden").getAsJsonObject().get("teleportedRidden").getAsBoolean();
+        teleportLeashed = data.get("teleportLeashed").getAsJsonObject().get("teleportLeashed").getAsBoolean();
 
         final JsonArray dimensionData = data.get(DIMENSIONCON).getAsJsonArray();
         dimensionDataList.clear();
