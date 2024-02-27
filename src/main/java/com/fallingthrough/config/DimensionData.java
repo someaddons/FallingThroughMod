@@ -1,5 +1,6 @@
 package com.fallingthrough.config;
 
+import com.cupboard.util.BlockSearch;
 import com.google.gson.JsonObject;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -185,23 +186,39 @@ public class DimensionData
         {
             case AIR:
                 final BlockPos solidAir =
-                  findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND);
+                  BlockSearch.findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 10, 20, -2, DOUBLE_AIR_GROUND_FIVE);
                 if (solidAir != null)
                 {
                     return solidAir;
                 }
-                return findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 20, 50, -2, DOUBLE_AIR);
+                return BlockSearch.findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 20, 50, -2, DOUBLE_AIR);
             case GROUND:
                 // Load chunk
                 final ChunkAccess targetChunk = world.getChunk((int) Math.floor(xOriginal) >> 4, (int) Math.floor(zOriginal) >> 4);
-                return findAround(world,
+                BlockPos result = BlockSearch.findAround(world,
                   new BlockPos((int) xOriginal, targetChunk.getHeight(Heightmap.Types.WORLD_SURFACE, (int) Math.floor(xOriginal), (int) Math.floor(zOriginal)), (int) zOriginal),
                   20,
                   50,
                   2,
-                  DOUBLE_AIR);
+                  DOUBLE_AIR_GROUND_FIVE);
+                if (result == null)
+                {
+                    result = BlockSearch.findAround(world,
+                      new BlockPos((int) xOriginal, targetChunk.getHeight(Heightmap.Types.WORLD_SURFACE, (int) Math.floor(xOriginal), (int) Math.floor(zOriginal)), (int) zOriginal),
+                      20,
+                      50,
+                      2,
+                      DOUBLE_AIR_GROUND);
+                }
+                return result;
             case CAVE:
-                return findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 20, 50, 2, DOUBLE_AIR_GROUND);
+                BlockPos cresult = BlockSearch.findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 20, 50, 2, DOUBLE_AIR_GROUND_FIVE);
+                if (cresult == null)
+                {
+                    cresult = BlockSearch.findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 20, 50, 2, DOUBLE_AIR_GROUND);
+                }
+
+                return cresult;
         }
 
         return null;
@@ -213,90 +230,21 @@ public class DimensionData
     final BiPredicate<BlockGetter, BlockPos> DOUBLE_AIR        =
       (world, pos) -> world.getBlockState(pos).isAir() && world.getBlockState(pos.above()).isAir();
     final BiPredicate<BlockGetter, BlockPos> DOUBLE_AIR_GROUND = DOUBLE_AIR.and((world, pos) -> world.getBlockState(pos.below()).isSolid());
-
-    /**
-     * Finds a nice position around
-     *
-     * @param world
-     * @param start
-     * @param horizontal
-     * @param vertical
-     * @param yStep
-     * @param predicate
-     * @return
-     */
-    public static BlockPos findAround(
-      final ServerLevel world,
-      final BlockPos start,
-      final int vertical,
-      final int horizontal,
-      final int yStep,
-      final BiPredicate<BlockGetter, BlockPos> predicate)
-    {
-        if (horizontal < 1 && vertical < 1)
+    final BiPredicate<BlockGetter, BlockPos> DOUBLE_AIR_GROUND_FIVE =    (world, pos) -> {
+        for (int x = -1; x <= 1; x++)
         {
-            return null;
-        }
-
-        BlockPos temp;
-        int y = 0;
-        int y_offset = yStep;
-
-        for (int i = 0; i < vertical + 2; i++)
-        {
-            for (int steps = 1; steps <= horizontal; steps++)
+            for (int z = -1; z <= 1; z++)
             {
-                // Start topleft of middle point
-                temp = start.offset(-steps, y, -steps);
-
-                // X ->
-                for (int x = 0; x <= steps; x++)
+                BlockPos checkPos = pos.offset(x, 0, z);
+                if (!(world.getBlockState(checkPos).isAir()
+                  && world.getBlockState(checkPos.above()).isAir()
+                  && world.getBlockState(checkPos.below()).isSolid()))
                 {
-                    temp = temp.offset(1, 0, 0);
-                    if (predicate.test(world, temp))
-                    {
-                        return temp;
-                    }
-                }
-
-                // X
-                // |
-                // v
-                for (int z = 0; z <= steps; z++)
-                {
-                    temp = temp.offset(0, 0, 1);
-                    if (predicate.test(world, temp))
-                    {
-                        return temp;
-                    }
-                }
-
-                // < - X
-                for (int x = 0; x <= steps; x++)
-                {
-                    temp = temp.offset(-1, 0, 0);
-                    if (predicate.test(world, temp))
-                    {
-                        return temp;
-                    }
-                }
-
-                // ^
-                // |
-                // X
-                for (int z = 0; z <= steps; z++)
-                {
-                    temp = temp.offset(0, 0, -1);
-                    if (predicate.test(world, temp))
-                    {
-                        return temp;
-                    }
+                    return false;
                 }
             }
-
-            y += y_offset;
         }
 
-        return null;
-    }
+        return true;
+    };
 }

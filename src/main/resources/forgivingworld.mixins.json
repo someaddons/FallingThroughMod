@@ -3,7 +3,8 @@
   "package": "com.fallingthrough.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "PlayerTickMixin"
+    "PlayerTickMixin",
+    "PlayerPortalCheck"
   ],
   "client": [
   ],
