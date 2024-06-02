@@ -51,7 +51,7 @@ public class EventHandler
         }
 
         final Long lastTime = lastTpTime.get(player.getUUID());
-        if (lastTime != null && player.level().getGameTime() - lastTime < 20 * 15)
+        if (lastTime != null && player.level().getGameTime() - lastTime < 20 * ForgivingWorldMod.config.getCommonConfig().teleportCooldown)
         {
             return;
         }
@@ -79,7 +79,7 @@ public class EventHandler
             return;
         }
 
-        if (player.getY() < tp.belowY && Math.abs(player.getY() - tp.belowY) > 15
+        if (ForgivingWorldMod.config.getCommonConfig().instantTeleport || player.getY() < tp.belowY && Math.abs(player.getY() - tp.belowY) > 15
               || player.getY() > tp.aboveY && Math.abs(player.getY() - tp.aboveY) > 15)
         {
             tryTpPlayer((ServerPlayer) player, tp);
@@ -209,6 +209,7 @@ public class EventHandler
         BlockPos tpPos = gotoDim.getSpawnPos(gotoWorld, playerEntity.getX(), playerEntity.getZ());
         if (tpPos == null)
         {
+            lastTpTime.put(playerEntity.getUUID(),playerEntity.level().getGameTime() - 20 * 5);
             return false;
         }
 
