@@ -19,12 +19,15 @@ public class CommonConfiguration implements ICommonConfig
 {
     private final static String DIMENSIONCON = "dimensionconnections";
 
-    public  Map<ResourceLocation, List<DimensionData>> dimensionConnections = new HashMap<>();
-    private List<DimensionData>                        dimensionDataList    = new ArrayList<>();
-    public  boolean                                    disableVanillaPortals         = false;
-    public  boolean                                    teleportLeashed         = true;
-    public  boolean                                    teleportedRidden         = true;
-    public  boolean                                    debuglogging         = false;
+    public  Map<ResourceLocation, List<DimensionData>> dimensionConnections  = new HashMap<>();
+    private List<DimensionData>                        dimensionDataList     = new ArrayList<>();
+    public  boolean                                    disableVanillaPortals = false;
+    public  boolean                                    instantTeleport       = false;
+    public  boolean                                    teleportLeashed       = true;
+    public  boolean                                    teleportedRidden      = true;
+    public  boolean                                    debuglogging          = false;
+    public  boolean                                    placeStone            = false;
+    public  int                                        teleportCooldown      = 15;
 
     public CommonConfiguration()
     {
@@ -70,6 +73,16 @@ public class CommonConfiguration implements ICommonConfig
         entry2.addProperty("disableVanillaPortals", disableVanillaPortals);
         root.add("disableVanillaPortals", entry2);
 
+        final JsonObject entry8 = new JsonObject();
+        entry8.addProperty("desc:", "Sets a delay before you can teleport again, default:15 seconds");
+        entry8.addProperty("teleportCooldown", teleportCooldown);
+        root.add("teleportCooldown", entry8);
+
+        final JsonObject entry9 = new JsonObject();
+        entry9.addProperty("desc:", "Instantly teleports instead of notifying the user over time,(Note this causes some lag, due to loading chunks directly) default:false");
+        entry9.addProperty("instantTeleport", instantTeleport);
+        root.add("instantTeleport", entry9);
+
         final JsonObject entry4 = new JsonObject();
         entry4.addProperty("desc:", "Teleport ridden entities too, default:true");
         entry4.addProperty("teleportedRidden", teleportedRidden);
@@ -99,8 +112,10 @@ public class CommonConfiguration implements ICommonConfig
     {
         debuglogging = data.get("debuglogging").getAsJsonObject().get("debuglogging").getAsBoolean();
         disableVanillaPortals = data.get("disableVanillaPortals").getAsJsonObject().get("disableVanillaPortals").getAsBoolean();
+        teleportCooldown = data.get("teleportCooldown").getAsJsonObject().get("teleportCooldown").getAsInt();
         teleportedRidden = data.get("teleportedRidden").getAsJsonObject().get("teleportedRidden").getAsBoolean();
         teleportLeashed = data.get("teleportLeashed").getAsJsonObject().get("teleportLeashed").getAsBoolean();
+        instantTeleport = data.get("instantTeleport").getAsJsonObject().get("instantTeleport").getAsBoolean();
 
             final JsonArray dimensionData = data.get(DIMENSIONCON).getAsJsonArray();
             dimensionDataList.clear();
