@@ -80,6 +80,17 @@ public class EventHandler
               || player.getY() > tp.aboveY && Math.abs(player.getY() - tp.aboveY) > 15)
         {
             tryTpPlayer((ServerPlayer) player, tp);
+
+            for (final ResourceKey<Level> key : player.level().getServer().levelKeys())
+            {
+                if (key.location().equals(tp.to))
+                {
+                    final ChunkPos dimensionPos = new ChunkPos(tp.translatePosition(player.blockPosition()));
+                    player.level().getServer().getLevel(key).getChunkSource().addRegionTicket(TELEPORT_TICKET, dimensionPos, 3, dimensionPos);
+                    return;
+                }
+            }
+
             return;
         }
 
@@ -87,7 +98,7 @@ public class EventHandler
         time += 1;
         playerTpTime.put(player.getUUID(), time);
 
-        ((ServerLevel)player.level()).sendParticles(ParticleTypes.SOUL_FIRE_FLAME,player.getX(), player.getY()+1, player.getZ(), 50, 1, 0.5,1, 0.05);
+        ((ServerLevel) player.level()).sendParticles(ParticleTypes.SOUL_FIRE_FLAME, player.getX(), player.getY() + 1, player.getZ(), 50, 1, 0.5, 1, 0.05);
 
         if (time == 1)
         {
@@ -115,7 +126,7 @@ public class EventHandler
             if (gotoWorld != null)
             {
                 final ChunkPos dimensionPos = new ChunkPos(tp.translatePosition(player.blockPosition()));
-                gotoWorld.getChunkSource().addRegionTicket(TELEPORT_TICKET, dimensionPos, 2, dimensionPos);
+                gotoWorld.getChunkSource().addRegionTicket(TELEPORT_TICKET, dimensionPos, 3, dimensionPos);
             }
         }
 
@@ -157,10 +168,25 @@ public class EventHandler
 
             for (final DimensionData data : dimensions)
             {
-                if (playerEntity.getY() < data.belowY && tryTpPlayer(playerEntity, data))
+                if (playerEntity.getY() < data.belowY)
                 {
-                    cir.setReturnValue(false);
-                    break;
+                    for (final ResourceKey<Level> key : playerEntity.getServer().levelKeys())
+                    {
+                        if (key.location().equals(data.to))
+                        {
+                            // Forces chunk to load right away
+                            playerEntity.getServer()
+                              .getLevel(key)
+                              .getChunk(data.translatePosition(playerEntity.blockPosition()).getX() >> 4, data.translatePosition(playerEntity.blockPosition()).getZ() >> 4);
+                            break;
+                        }
+                    }
+
+                    if (tryTpPlayer(playerEntity, data))
+                    {
+                        cir.setReturnValue(false);
+                        break;
+                    }
                 }
             }
         }
@@ -201,11 +227,10 @@ public class EventHandler
             // Use same world?
             return false;
         }
-
         BlockPos tpPos = gotoDim.getSpawnPos(gotoWorld, playerEntity.getX(), playerEntity.getZ());
         if (tpPos == null)
         {
-            lastTpTime.put(playerEntity.getUUID(),playerEntity.level().getGameTime() - 20 * 5);
+            lastTpTime.put(playerEntity.getUUID(), playerEntity.level().getGameTime() - 20 * 5);
             return false;
         }
 
@@ -312,7 +337,7 @@ public class EventHandler
 
             entity.moveTo(x, y, z, entity.getYRot(), entity.getXRot());
             entity.setDeltaMovement(Vec3.ZERO);
-            gotoWorld.getChunk((int)x >> 4, (int)z >> 4);
+            gotoWorld.getChunk((int) x >> 4, (int) z >> 4);
             gotoWorld.addDuringTeleport(entity);
             return entity;
         }
