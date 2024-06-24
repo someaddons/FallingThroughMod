@@ -212,7 +212,7 @@ public class DimensionData
                 }
                 return result;
             case CAVE:
-                BlockPos cresult = BlockSearch.findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 20, 50, 2, DOUBLE_AIR_GROUND_FIVE);
+                BlockPos cresult = BlockSearch.findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 50, 50, 2, DOUBLE_AIR_GROUND_FIVE);
                 if (cresult == null)
                 {
                     cresult = BlockSearch.findAround(world, new BlockPos((int) xOriginal, teleportToYlevel, (int) zOriginal), 20, 50, 2, DOUBLE_AIR_GROUND);

@@ -48,7 +48,7 @@ public class EventHandler
         }
 
         final Long lastTime = lastTpTime.get(player.getUUID());
-        if (lastTime != null && player.level().getGameTime() - lastTime < 20 * FallingthroughMod.config.getCommonConfig().teleportCooldown)
+        if (lastTime != null && (System.currentTimeMillis() - lastTime) < 1000L * FallingthroughMod.config.getCommonConfig().teleportCooldown)
         {
             return;
         }
@@ -227,20 +227,30 @@ public class EventHandler
             // Use same world?
             return false;
         }
+
+        final Long lastTime = lastTpTime.get(playerEntity.getUUID());
+        if (lastTime != null && System.currentTimeMillis() - lastTime < FallingthroughMod.config.getCommonConfig().teleportCooldown * 1000)
+        {
+            return false;
+        }
+
         BlockPos tpPos = gotoDim.getSpawnPos(gotoWorld, playerEntity.getX(), playerEntity.getZ());
         if (tpPos == null)
         {
-            lastTpTime.put(playerEntity.getUUID(), playerEntity.level().getGameTime() - 20 * 5);
+            if (FallingthroughMod.config.getCommonConfig().debuglogging)
+            {
+                FallingthroughMod.LOGGER.info(
+                  "Cannot find spawn pos in target dimension for player " + playerEntity.getDisplayName().getString() + "(" + playerEntity.getId() + ") from " + playerEntity.blockPosition().toShortString() + " in "
+                    + playerEntity.level().dimension().location()
+                    + " around: " + gotoDim.translatePosition(playerEntity.blockPosition()) + " in " + gotoWorld.dimension().location() +
+                    " with TP type:" + gotoDim.yspawn);
+            }
+
+            lastTpTime.put(playerEntity.getUUID(), (System.currentTimeMillis() - (FallingthroughMod.config.getCommonConfig().teleportCooldown * 1000L)) + 5000);
             return false;
         }
 
-        final Long lastTime = lastTpTime.get(playerEntity.getUUID());
-        if (lastTime != null && world.getGameTime() - lastTime < 20 * 15)
-        {
-            return false;
-        }
-
-        lastTpTime.put(playerEntity.getUUID(), playerEntity.level().getGameTime());
+        lastTpTime.put(playerEntity.getUUID(), System.currentTimeMillis());
 
         if (FallingthroughMod.config.getCommonConfig().debuglogging)
         {
